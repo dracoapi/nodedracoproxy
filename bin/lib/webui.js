@@ -148,7 +148,8 @@ class WebUI {
         logger.info('Decrypting session %d, response %s', req.params.session, req.params.request);
         try {
             const force = !this.config.ui.cachejson;
-            const data = await this.decoder.decodeResponse(req.params.session, req.params.request, force);
+            let data = await this.decoder.decodeResponse(req.params.session, req.params.request, force);
+            data = this.decoder.convertMapToArray(data);
             return res.json(data);
         }
         catch (e) {
