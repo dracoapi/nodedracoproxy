@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const logger = require("winston");
 const fs = require("mz/fs");
+const Wreck = require("wreck");
+const Subtext = require("subtext");
 const utils_1 = require("./utils");
 const deserializer_1 = require("./deserializer");
 class Decoder {
@@ -21,13 +23,13 @@ class Decoder {
                 return {};
             const data = JSON.parse(content);
             if (data.more && data.more.url === 'https://us.draconiusgo.com/serviceCall') {
-                let boundary = data.more.headers['Content-Type'] || data.more.headers['content-type'];
-                boundary = boundary.replace('multipart/form-data; boundary=', '').replace(/"/g, '');
-                const parts = this.utils.parseMultipart(Buffer.from(data.data, 'base64'), boundary);
-                const deserializer = new deserializer_1.default(parts.find(p => p.name === 'args').data);
+                const request = Wreck.toReadableStream(Buffer.from(data.data, 'base64'));
+                request.headers = data.more.headers;
+                const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+                const deserializer = new deserializer_1.default(payload.args);
                 data.data = {
-                    service: parts.find(p => p.name === 'service').data,
-                    method: parts.find(p => p.name === 'method').data,
+                    service: payload.service,
+                    method: payload.method,
                     data: deserializer.deserialize(),
                 };
             }
@@ -64,8 +66,8 @@ class Decoder {
         if (data === null || data === undefined)
             return data;
         if (data instanceof Map) {
-            let array = [];
-            for (let [key, value] of data) {
+            const array = [];
+            for (const [key, value] of data) {
                 array.push({
                     key,
                     value,
@@ -74,7 +76,7 @@ class Decoder {
             return array;
         }
         else if (typeof data === 'object' && data.__type) {
-            for (let key in data) {
+            for (const key in data) {
                 data[key] = this.convertMapToArray(data[key]);
             }
             return data;

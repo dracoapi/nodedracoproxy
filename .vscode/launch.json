@@ -4,8 +4,8 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Test",
-            "program": "${workspaceRoot}/src/test.ts",
+            "name": "Launch Program",
+            "program": "${workspaceRoot}/src/index.ts",
             "cwd": "${workspaceRoot}",
             "outFiles": [ "${workspaceRoot}/bin/**/*.js" ],
             "sourceMaps": true,
@@ -14,8 +14,8 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
-            "program": "${workspaceRoot}/src/index.ts",
+            "name": "Launch Test",
+            "program": "${workspaceRoot}/src/test.ts",
             "cwd": "${workspaceRoot}",
             "outFiles": [ "${workspaceRoot}/bin/**/*.js" ],
             "sourceMaps": true,

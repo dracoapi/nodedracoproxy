@@ -23,8 +23,9 @@
     "long": "^3.2.0",
     "moment": "^2.19.1",
     "mz": "^2.7.0",
-    "parse-multipart": "^1.0.4",
-    "winston": "^2.4.0"
+    "subtext": "^6.0.7",
+    "winston": "^2.4.0",
+    "wreck": "^14.0.2"
   },
   "devDependencies": {
     "@types/node": "^8.0.46"

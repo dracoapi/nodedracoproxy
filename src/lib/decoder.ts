@@ -2,7 +2,8 @@ import * as logger from 'winston';
 import * as fs from 'mz/fs';
 import * as _ from 'lodash';
 import * as moment from 'moment';
-import * as multipart from 'parse-multipart';
+import * as Wreck from 'wreck';
+import * as Subtext from 'subtext';
 
 import Config from './config';
 import Utils from './utils';
@@ -32,13 +33,14 @@ export default class Decoder {
 
             const data = JSON.parse(content);
             if (data.more && data.more.url === 'https://us.draconiusgo.com/serviceCall') {
-                let boundary = data.more.headers['Content-Type'] || data.more.headers['content-type'];
-                boundary = boundary.replace('multipart/form-data; boundary=', '').replace(/"/g, '');
-                const parts = this.utils.parseMultipart(Buffer.from(data.data, 'base64'), boundary);
-                const deserializer = new Deserializer(parts.find(p => p.name === 'args').data);
+                const request = Wreck.toReadableStream(Buffer.from(data.data, 'base64'));
+                request.headers = data.more.headers;
+                const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+
+                const deserializer = new Deserializer(payload.args);
                 data.data = {
-                    service: parts.find(p => p.name === 'service').data,
-                    method: parts.find(p => p.name === 'method').data,
+                    service: payload.service,
+                    method: payload.method,
                     data: deserializer.deserialize(),
                 };
             }
@@ -78,8 +80,8 @@ export default class Decoder {
     convertMapToArray(data: any) {
         if (data === null || data === undefined) return data;
         if (data instanceof Map) {
-            let array = [];
-            for (let [key, value] of data) {
+            const array = [];
+            for (const [key, value] of data) {
                 array.push({
                     key,
                     value,
@@ -87,7 +89,7 @@ export default class Decoder {
             }
             return array;
         } else if (typeof data === 'object' && data.__type) {
-            for (let key in data) {
+            for (const key in data) {
                 data[key] = this.convertMapToArray(data[key]);
             }
             return data;
