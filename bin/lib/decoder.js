@@ -5,7 +5,7 @@ const fs = require("mz/fs");
 const Wreck = require("wreck");
 const Subtext = require("subtext");
 const utils_1 = require("./utils");
-const deserializer_1 = require("./deserializer");
+const deserializer_1 = require("../draco/deserializer");
 class Decoder {
     constructor(config, doNotHide = false) {
         this.config = config;

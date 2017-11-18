@@ -7,7 +7,7 @@ import * as Subtext from 'subtext';
 
 import Config from './config';
 import Utils from './utils';
-import Deserializer from './deserializer';
+import Deserializer from '../draco/deserializer';
 
 export default class Decoder {
     config: any;
