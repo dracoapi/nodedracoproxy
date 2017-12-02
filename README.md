@@ -7,6 +7,7 @@ Proxy and UI in order to analyse trafic of Draconius GO using mitm.
 
 ```
 git clone https://github.com/dracoapi/nodedracoproxy.git
+npm i
 node ./bin/index.js
 ```
 Then just configure your phone proxy to your computer IP, port 8888
