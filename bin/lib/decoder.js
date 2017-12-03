@@ -26,7 +26,8 @@ class Decoder {
                 const request = Wreck.toReadableStream(Buffer.from(data.data, 'base64'));
                 request.headers = data.more.headers;
                 const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data' });
-                const deserializer = new deserializer_1.default(payload.args);
+                const version = request.headers['protocol-version'];
+                const deserializer = new deserializer_1.default(version, payload.args);
                 data.data = {
                     service: payload.service,
                     method: payload.method,
@@ -48,10 +49,12 @@ class Decoder {
                 const data = await fs.readFile(`data/${session}/${requestId}.res.json`, 'utf8');
                 return JSON.parse(data);
             }
+            const request = await this.decodeRequest(session, requestId, false);
+            const version = request ? request.more.headers['protocol-version'] : null;
             let raw = await fs.readFile(`data/${session}/${requestId}.res.bin`, 'utf8');
             if (raw[0] === '{'.charCodeAt(0))
                 raw = JSON.parse(raw).data;
-            const deserializer = new deserializer_1.default(Buffer.from(raw, 'base64'));
+            const deserializer = new deserializer_1.default(version, Buffer.from(raw, 'base64'));
             const data = deserializer.deserialize();
             await fs.writeFile(`data/${session}/${requestId}.res.json`, JSON.stringify(data, null, 2), 'utf8');
             return data;
