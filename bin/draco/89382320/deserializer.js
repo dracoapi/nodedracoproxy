@@ -1,12 +1,11 @@
-import * as long from 'long';
-import * as objects from './objects';
-import * as enums from './enums';
-import { classIds, primitiveIds } from './classes';
-
-export default class Deserializer {
-    buffer: Buffer;
-    idx: number;
-    constructor(buffer: Buffer) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const long = require("long");
+const objects = require("./objects");
+const enums = require("./enums");
+const classes_1 = require("./classes");
+class Deserializer {
+    constructor(buffer) {
         this.buffer = buffer;
         this.idx = 0;
     }
@@ -70,7 +69,7 @@ export default class Deserializer {
         this.idx += len;
         return value;
     }
-    readStaticArray(type: string, staticobject = false) {
+    readStaticArray(type, staticobject = false) {
         const ln = this.readLength();
         const array = [];
         for (let i = 0; i < ln; i++) {
@@ -82,24 +81,27 @@ export default class Deserializer {
         const id = this.readSByte();
         if (id === 2) {
             const classId = this.readSByte().toString();
-            const type = classIds[classId];
+            const type = classes_1.classIds[classId];
             return this.readStaticArray(type, staticobject);
-        } else if (id === 3) {
+        }
+        else if (id === 3) {
             const classId = this.readSByte().toString();
-            const type = primitiveIds[classId];
+            const type = classes_1.primitiveIds[classId];
             return this.readStaticArray(type, true);
-        } else {
+        }
+        else {
             throw new Error('readDynamicArray');
         }
     }
-    readDynamicList(type: string, isstatic = false) {
-        if (this.readSByte() === 0) return null;
+    readDynamicList(type, isstatic = false) {
+        if (this.readSByte() === 0)
+            return null;
         return this.readStaticList(type, isstatic);
     }
-    readStaticList(type: string, staticobject = false) {
+    readStaticList(type, staticobject = false) {
         return this.readStaticArray(type, staticobject);
     }
-    readStaticHashSet(type: string, staticobject = false) {
+    readStaticHashSet(type, staticobject = false) {
         const ln = this.readLength();
         const set = new Set();
         for (let i = 0; i < ln; i++) {
@@ -107,11 +109,13 @@ export default class Deserializer {
         }
         return set;
     }
-    readDynamicMap(type1: string, type2: string, static1 = false, static2 = false) {
-        if (this.readSByte() === 0) return null;
-        else return this.readStaticMap(type1, type2, static1, static2);
+    readDynamicMap(type1, type2, static1 = false, static2 = false) {
+        if (this.readSByte() === 0)
+            return null;
+        else
+            return this.readStaticMap(type1, type2, static1, static2);
     }
-    readStaticMap(type1: string, type2: string, static1 = false, static2 = false) {
+    readStaticMap(type1, type2, static1 = false, static2 = false) {
         const ln = this.readLength();
         const map = new Map();
         for (let i = 0; i < ln; i++) {
@@ -127,43 +131,57 @@ export default class Deserializer {
         this.idx += ln;
         return buff;
     }
-    readObject(type: string, staticobject = false) {
-        if (staticobject) return this.readStaticObject(type);
-        else return this.readDynamicObject();
+    readObject(type, staticobject = false) {
+        if (staticobject)
+            return this.readStaticObject(type);
+        else
+            return this.readDynamicObject();
     }
     readStaticObject(type) {
-        let match: RegExpExecArray;
+        let match;
         if (type === 'bool') {
             return this.readBoolean();
-        } else if (type === 'sbyte') {
+        }
+        else if (type === 'sbyte') {
             return this.readSByte();
-        } else if (type === 'short') {
+        }
+        else if (type === 'short') {
             return this.readShort();
-        } else if (type === 'int') {
+        }
+        else if (type === 'int') {
             return this.readInt32();
-        } else if (type === 'long') {
+        }
+        else if (type === 'long') {
             return this.readInt64();
-        } else if (type === 'float') {
+        }
+        else if (type === 'float') {
             const val = this.buffer.readFloatBE(this.idx);
             this.idx += 4;
             return val;
-        } else if (type === 'double') {
+        }
+        else if (type === 'double') {
             return this.readDouble();
-        } else if (type === 'string') {
+        }
+        else if (type === 'string') {
             return this.readUtf8String();
-        } else if ((match = /List<(.*)>/.exec(type))) {
+        }
+        else if ((match = /List<(.*)>/.exec(type))) {
             const objtype = match[1] || 'object';
             return this.readStaticList(match[1], false);
-        } else if ((match = /Set<(.*)>/.exec(type))) {
+        }
+        else if ((match = /Set<(.*)>/.exec(type))) {
             const objtype = match[1] || 'object';
             return this.readStaticHashSet(match[1], false);
-        } else if (enums[type]) {
-            return this.readByte();
-        } else if (objects[type]) {
+        }
+        else if (enums[type]) {
+            return this.readSByte();
+        }
+        else if (objects[type]) {
             const obj = new objects[type]();
             obj.deserialize(this);
             return obj;
-        } else {
+        }
+        else {
             console.error('unhandled type: ' + type);
             return null;
         }
@@ -172,11 +190,13 @@ export default class Deserializer {
         const id = this.readSByte();
         if (id === 0) {
             return null;
-        } else if (id === 2 || id === 3) {
+        }
+        else if (id === 2 || id === 3) {
             this.idx--;
             return this.readDynamicArray();
-        } else {
-            const type = classIds[id.toString()];
+        }
+        else {
+            const type = classes_1.classIds[id.toString()];
             return this.readStaticObject(type);
         }
     }
@@ -184,3 +204,5 @@ export default class Deserializer {
         return this.readDynamicObject();
     }
 }
+exports.default = Deserializer;
+//# sourceMappingURL=deserializer.js.map
