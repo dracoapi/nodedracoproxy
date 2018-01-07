@@ -100,8 +100,11 @@ class WebUI {
                     else if (data.more.url === 'https://us.draconiusgo.com/ping') {
                         title = 'ping';
                     }
+                    else if (data.more.url.startsWith('https://us.draconiusgo.com/AssetBundles')) {
+                        title = 'asset';
+                    }
                     else {
-                        title = data.more.host;
+                        title = data.more.headers.host;
                     }
                 }
                 return {
