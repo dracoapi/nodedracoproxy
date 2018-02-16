@@ -169,8 +169,6 @@ class Serializer {
         }
     }
     writeBuffer(buffer) {
-        if (!buffer)
-            buffer = Buffer.alloc(0);
         this.ensureBuffer(buffer.length + 4);
         this.writeLength(buffer.length);
         this.buffer = Buffer.concat([this.buffer, buffer]);
