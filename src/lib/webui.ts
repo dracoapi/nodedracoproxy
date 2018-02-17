@@ -150,7 +150,7 @@ export default class WebUI {
             const data = await this.decoder.decodeRequest(req.params.session, req.params.request, force);
             return res.json({
                 info: data.more,
-                data: data.data,
+                data: this.decoder.prettify(data.data),
             });
         } catch (e) {
             logger.error(e);
@@ -163,7 +163,7 @@ export default class WebUI {
         try {
             const force = !this.config.ui.cachejson;
             let data = await this.decoder.decodeResponse(req.params.session, req.params.request, force);
-            data = this.decoder.convertMapToArray(data);
+            data = this.decoder.prettify(data);
             return res.json(data);
         } catch (e) {
             logger.error(e);

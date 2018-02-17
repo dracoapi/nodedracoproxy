@@ -4,6 +4,7 @@ const logger = require("winston");
 const fs = require("mz/fs");
 const Wreck = require("wreck");
 const Subtext = require("subtext");
+const long = require("long");
 const utils_1 = require("./utils");
 const deserializer_1 = require("../draco/deserializer");
 class Decoder {
@@ -65,7 +66,7 @@ class Decoder {
             return { error: 'unable to decode response' };
         }
     }
-    convertMapToArray(data) {
+    prettify(data) {
         if (data === null || data === undefined)
             return data;
         if (data instanceof Map) {
@@ -73,20 +74,26 @@ class Decoder {
             for (const [key, value] of data) {
                 array.push({
                     key,
-                    value,
+                    value: this.prettify(value),
                 });
             }
             return array;
         }
-        else if (typeof data === 'object' && data.__type) {
-            for (const key in data) {
-                data[key] = this.convertMapToArray(data[key]);
-            }
-            return data;
+        else if (data instanceof long) {
+            return data.toString();
         }
         else if (Array.isArray(data)) {
             for (let i = 0; i < data.length; i++) {
-                data[i] = this.convertMapToArray(data[i]);
+                data[i] = this.prettify(data[i]);
+            }
+            return data;
+        }
+        else if (data instanceof Buffer) {
+            return data.toString('base64');
+        }
+        else if (typeof data === 'object') {
+            for (const key in data) {
+                data[key] = this.prettify(data[key]);
             }
             return data;
         }

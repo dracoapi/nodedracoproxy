@@ -4,6 +4,7 @@ import * as _ from 'lodash';
 import * as moment from 'moment';
 import * as Wreck from 'wreck';
 import * as Subtext from 'subtext';
+import * as long from 'long';
 
 import Config from './config';
 import Utils from './utils';
@@ -80,25 +81,29 @@ export default class Decoder {
         }
     }
 
-    convertMapToArray(data: any) {
+    prettify(data: any) {
         if (data === null || data === undefined) return data;
         if (data instanceof Map) {
             const array = [];
             for (const [key, value] of data) {
                 array.push({
                     key,
-                    value,
+                    value: this.prettify(value),
                 });
             }
             return array;
-        } else if (typeof data === 'object' && data.__type) {
-            for (const key in data) {
-                data[key] = this.convertMapToArray(data[key]);
-            }
-            return data;
+        } else if (data instanceof long) {
+            return data.toString();
         } else if (Array.isArray(data)) {
             for (let i = 0; i < data.length; i++) {
-                data[i] = this.convertMapToArray(data[i]);
+                data[i] = this.prettify(data[i]);
+            }
+            return data;
+        } else if (data instanceof Buffer) {
+            return data.toString('base64');
+        } else if (typeof data === 'object') { //  && data.__type
+            for (const key in data) {
+                data[key] = this.prettify(data[key]);
             }
             return data;
         } else {
