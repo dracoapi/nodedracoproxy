@@ -1,6 +1,8 @@
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/niicodev)
 
 # Node Draco Proxy
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/dracoapi/nodedracoproxy.svg)](https://greenkeeper.io/)
 Proxy and UI in order to analyse trafic of Draconius GO using mitm.
 
 ## Install & Run
