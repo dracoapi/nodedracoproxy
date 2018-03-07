@@ -5,6 +5,7 @@ const fs = require("mz/fs");
 const Wreck = require("wreck");
 const Subtext = require("subtext");
 const long = require("long");
+const querystring = require("querystring");
 const utils_1 = require("./utils");
 const deserializer_1 = require("../draco/deserializer");
 class Decoder {
@@ -34,6 +35,9 @@ class Decoder {
                     method: payload.method,
                     data: deserializer.deserialize(),
                 };
+            }
+            else if (data.more && data.more.url === 'https://us.draconiusgo.com/client-error') {
+                data.data = querystring.parse(Buffer.from(data.data, 'base64').toString());
             }
             await fs.writeFile(`data/${session}/${requestId}.req.json`, JSON.stringify(data, null, 2), 'utf8');
             return data;

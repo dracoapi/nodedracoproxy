@@ -5,6 +5,7 @@ import * as moment from 'moment';
 import * as Wreck from 'wreck';
 import * as Subtext from 'subtext';
 import * as long from 'long';
+import * as querystring from 'querystring';
 
 import Config from './config';
 import Utils from './utils';
@@ -44,6 +45,8 @@ export default class Decoder {
                     method: payload.method,
                     data: deserializer.deserialize(),
                 };
+            } else if (data.more && data.more.url === 'https://us.draconiusgo.com/client-error') {
+                data.data = querystring.parse(Buffer.from(data.data, 'base64').toString());
             }
 
             await fs.writeFile(`data/${session}/${requestId}.req.json`, JSON.stringify(data, null, 2), 'utf8');
