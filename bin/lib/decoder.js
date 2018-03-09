@@ -83,6 +83,9 @@ class Decoder {
             }
             return array;
         }
+        else if (data instanceof Set) {
+            return Array.from(data);
+        }
         else if (data instanceof long) {
             return data.toString();
         }
