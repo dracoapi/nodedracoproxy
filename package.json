@@ -17,17 +17,17 @@
     "dotenv": "^5.0.1",
     "express": "^4.16.3",
     "http-mitm-proxy": "^0.6.1",
-    "https-proxy-agent": "^2.2.0",
+    "https-proxy-agent": "^2.2.1",
     "js-yaml": "^3.11.0",
     "lodash": "^4.17.5",
-    "long": "^3.2.0",
-    "moment": "^2.21.0",
+    "long": "^4.0.0",
+    "moment": "^2.22.0",
     "mz": "^2.7.0",
     "subtext": "^6.0.7",
     "winston": "^2.4.1",
     "wreck": "^14.0.2"
   },
   "devDependencies": {
-    "@types/node": "^9.4.6"
+    "@types/node": "^9.6.1"
   }
 }

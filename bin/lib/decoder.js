@@ -98,7 +98,7 @@ class Decoder {
         else if (data instanceof Buffer) {
             return data.toString('base64');
         }
-        else if (typeof data === 'object') {
+        else if (typeof data === 'object') { //  && data.__type
             for (const key in data) {
                 data[key] = this.prettify(data[key]);
             }
