@@ -21,13 +21,13 @@
     "js-yaml": "^3.11.0",
     "lodash": "^4.17.5",
     "long": "^4.0.0",
-    "moment": "^2.22.0",
+    "moment": "^2.22.1",
     "mz": "^2.7.0",
     "subtext": "^6.0.7",
     "winston": "^2.4.1",
     "wreck": "^14.0.2"
   },
   "devDependencies": {
-    "@types/node": "^9.6.1"
+    "@types/node": "^9.6.5"
   }
 }
