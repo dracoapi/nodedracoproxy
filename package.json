@@ -24,10 +24,10 @@
     "moment": "^2.22.2",
     "mz": "^2.7.0",
     "subtext": "^6.0.7",
-    "winston": "^2.4.2",
+    "winston": "^2.4.3",
     "wreck": "^14.0.2"
   },
   "devDependencies": {
-    "@types/node": "^10.3.0"
+    "@types/node": "^10.5.2"
   }
 }
