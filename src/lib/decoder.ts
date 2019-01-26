@@ -1,19 +1,16 @@
 import * as logger from 'winston';
 import * as fs from 'mz/fs';
 import * as _ from 'lodash';
-import * as moment from 'moment';
 import * as Wreck from 'wreck';
 import * as Subtext from 'subtext';
 import * as long from 'long';
 import * as querystring from 'querystring';
 
-import Config from './config';
 import Utils from './utils';
 import GenericDeserializer from '../draco/deserializer';
 
 export default class Decoder {
     config: any;
-    altProtos: any;
     doNotHide: boolean;
     utils: Utils;
 
@@ -31,7 +28,7 @@ export default class Decoder {
             }
 
             const content = await fs.readFile(`data/${session}/${requestId}.req.bin`, 'utf8');
-            if (content.length === 0)  return {};
+            if (content.length === 0) return {};
 
             const data = JSON.parse(content);
             if (data.more && data.more.url === 'https://us.draconiusgo.com/serviceCall') {
@@ -80,7 +77,7 @@ export default class Decoder {
         } catch (e) {
             logger.error('Error decrypting response %s of session %s', requestId, session);
             logger.error(e);
-            return {error: 'unable to decode response'};
+            return { error: 'unable to decode response' };
         }
     }
 

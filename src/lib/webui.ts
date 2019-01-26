@@ -1,6 +1,5 @@
 import * as express from 'express';
 import * as logger from 'winston';
-import * as path from 'path';
 import * as fs from 'mz/fs';
 import * as _ from 'lodash';
 import * as moment from 'moment';
@@ -27,7 +26,7 @@ export default class WebUI {
             const app = this.app = express();
             app.set('etag', false);
 
-            app.use('/api*', function(req, res, next) {
+            app.use('/api*', function (req, res, next) {
                 res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
                 res.header('Expires', '-1');
                 res.header('Pragma', 'no-cache');
@@ -40,10 +39,10 @@ export default class WebUI {
             app.get('/api/request/:session/:request', <express.RequestHandler>_.bind(this.decodeRequest, this));
             app.get('/api/response/:session/:request', <express.RequestHandler>_.bind(this.decodeResponse, this));
 
-            this.app.get('/logout', function(req, res) {
-                                    req.logout();
-                                    res.redirect('/');
-                                });
+            this.app.get('/logout', function (req, res) {
+                req.logout();
+                res.redirect('/');
+            });
 
             app.use(express.static('webui'));
 

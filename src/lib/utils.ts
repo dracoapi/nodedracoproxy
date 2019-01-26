@@ -5,8 +5,6 @@ import * as moment from 'moment';
 import * as _ from 'lodash';
 import * as Bluebird from 'bluebird';
 
-import Config from './config';
-
 export default class Utils {
     config: any;
 
@@ -17,9 +15,17 @@ export default class Utils {
     getIp(): string {
         // typing is bad but I can't find a way to make it works
         const ipv4: any = _(os.networkInterfaces())
-                .filter((i, name) => !/(loopback|vmware|internal)/gi.test(name))
-                .flatten().filter(ip => !(<any>ip).internal && (<any>ip).family === 'IPv4').first();
+            .filter((i, name) => !/(loopback|vmware|internal)/gi.test(name))
+            .flatten().filter(ip => !(<any>ip).internal && (<any>ip).family === 'IPv4').first();
         return ipv4.address;
+    }
+
+    getIpv6(): string {
+        // typing is bad but I can't find a way to make it works
+        const ipv6: any = _(os.networkInterfaces())
+            .filter((i, name) => !/(loopback|vmware|internal)/gi.test(name))
+            .flatten().filter(ip => !(<any>ip).internal && (<any>ip).family === 'IPv6').first();
+        return ipv6.address;
     }
 
     async initFolders() {

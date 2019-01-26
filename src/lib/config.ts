@@ -6,10 +6,12 @@ import * as moment from 'moment';
 const yaml = require('js-yaml');
 const winstonCommon = require('winston/lib/winston/common');
 
-const config = {
+const config = {    
     reqId: 0,
     proxy: {
-        port: 8888,
+        active: true,
+        port: process.env.PROXY_PORT || 8888,
+        onlyApi: false,
     },
     ui: {
         active: true,
@@ -19,8 +21,13 @@ const config = {
             users: [],
         },
         ga: {
-            key: 'UA-108458756-1',
-        }
+            key: 'UA-92205812-1',
+        },
+        doNotHide: false,
+    },
+    alternateEndpoint: {
+        active: true,
+        https: true,
     },
     export: {
         csv: {
