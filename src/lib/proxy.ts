@@ -149,7 +149,7 @@ export default class MitmProxy {
 
             context.onRequestEnd(async (ctx, callback) => {
                 const buffer = Buffer.concat(requestChunks);
-                let url = (ctx.isSSL ? 'https' : 'http') + '://';
+                let url = (context.isSSL ? 'https' : 'http') + '://';
                 url += ctx.clientToProxyRequest.headers.host;
                 url += ctx.clientToProxyRequest.url;
 
@@ -187,15 +187,17 @@ export default class MitmProxy {
                 ctx.proxyToClientResponse.write(buffer);
                 callback(false);
             });
+
+            callback();
         }
         else {
             logger.debug('unhandled: %s%s', host, context.clientToProxyRequest.url);
             if (config.proxy.chainproxy) {
                 context.proxyToServerRequestOptions.agent = new HttpsProxyAgent(config.proxy.chainproxy);
             }
-        }
 
-        callback();
+            callback();
+        }
     }
 
     async simpleDumpRequest(id, ctx, buffer: Buffer, url: string) {
