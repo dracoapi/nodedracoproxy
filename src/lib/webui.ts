@@ -26,7 +26,7 @@ export default class WebUI {
             const app = this.app = express();
             app.set('etag', false);
 
-            app.use('/api*', function (req, res, next) {
+            app.use('/api*', function(req, res, next) {
                 res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
                 res.header('Expires', '-1');
                 res.header('Pragma', 'no-cache');

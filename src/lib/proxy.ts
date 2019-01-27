@@ -41,7 +41,7 @@ export default class MitmProxy {
                 .onError(_.bind(this.onError, this))
                 .onRequest(_.bind(this.onRequest, this))
                 .onConnect(_.bind(this.onConnect, this))
-                .listen({ port: config.proxy.port, silent: true, forceChunkedRequest: true/*, forceSNI: true*/ });
+                .listen({ port: config.proxy.port, silent: true/*, forceChunkedRequest: true, forceSNI: true*/ });
 
             this.proxy.onCertificateMissing = _.bind(this.onCertificateMissing, this);
             this.proxy.onCertificateRequired = _.bind(this.onCertificateRequired, this);
