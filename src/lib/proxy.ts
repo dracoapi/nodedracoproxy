@@ -10,7 +10,6 @@ const mitmproxy = require('http-mitm-proxy');
 import Utils from './utils';
 import MyCerts from './certs';
 import Decoder from './decoder';
-import { formatWithOptions } from 'util';
 
 const endpoints = {
     api: 'us.draconiusgo.com',
@@ -27,7 +26,6 @@ export default class MitmProxy {
         this.config = config;
         this.utils = new Utils(config);
         this.decoder = new Decoder(config);
-        //this.mycerts = new MyCerts();
     }
 
     async launch() {
@@ -88,29 +86,29 @@ export default class MitmProxy {
         const endpoint = _.findKey(endpoints, endpoint => endpoint === host);
         if (!endpoint) {
             logger.info('Tunnel to', req.url);
-            const conn = new Socket()
-                .connect(port, host, function () {
-                    socket.write('HTTP/' + req.httpVersion + ' 200 OK\r\n\r\n', 'UTF-8', function () {
-                        conn.pipe(socket);
-                        socket.pipe(conn);
-                    })
+            const conn = new Socket();
+            conn.connect(port, host, function () {
+                socket.write('HTTP/' + req.httpVersion + ' 200 OK\r\n\r\n', 'UTF-8', function () {
+                    conn.pipe(socket);
+                    socket.pipe(conn);
                 })
-                .on("error", function (e) {
-                    logger.error('Tunnel error', e);
-                });
+            });
+            conn.on("error", function (e) {
+                logger.error('Tunnel error', e);
+            });
         }
         else {
             return callback();
         }
     }
 
-    async onRequest(ctx, callback) {
+    async onRequest(context, callback) {
         const config = this.config;
-        const host = ctx.clientToProxyRequest.headers.host;
+        const host = context.clientToProxyRequest.headers.host;
         const endpoint = _.findKey(endpoints, endpoint => endpoint === host);
         if (host === `${config.ip}:${config.proxy.port}` || (config.proxy.hostname && _.startsWith(host, config.proxy.hostname))) {
-            const res = ctx.proxyToClientResponse;
-            if (_.startsWith(ctx.clientToProxyRequest.url, '/proxy.pac')) {
+            const res = context.proxyToClientResponse;
+            if (_.startsWith(context.clientToProxyRequest.url, '/proxy.pac')) {
                 // get proxy.pac
                 logger.info('Get proxy.pac');
                 let data = await fs.readFile('templates/proxy.pac', 'utf8');
@@ -121,7 +119,7 @@ export default class MitmProxy {
                 }
                 res.writeHead(200, { 'Content-Type': 'application/x-ns-proxy-autoconfig', 'Content-Length': data.length });
                 res.end(data, 'utf8');
-            } else if (_.startsWith(ctx.clientToProxyRequest.url, '/cert')) {
+            } else if (_.startsWith(context.clientToProxyRequest.url, '/cert')) {
                 // get cert
                 logger.info('Get certificate');
                 const path = this.proxy.sslCaDir + '/certs/ca.pem';
@@ -138,18 +136,18 @@ export default class MitmProxy {
             const responseChunks = [];
 
             if (config.proxy.chainproxy) {
-                ctx.proxyToServerRequestOptions.agent = new HttpsProxyAgent(config.proxy.chainproxy);
+                context.proxyToServerRequestOptions.agent = new HttpsProxyAgent(config.proxy.chainproxy);
             }
 
             const id = ++this.config.reqId;
             const requestId = _.padStart(id.toString(), 5, '0');
 
-            ctx.onRequestData((ctx, chunk, callback) => {
+            context.onRequestData((ctx, chunk, callback) => {
                 requestChunks.push(chunk);
-                return callback(null, chunk);
+                return callback(null, null);
             });
 
-            ctx.onRequestEnd(async (ctx, callback) => {
+            context.onRequestEnd(async (ctx, callback) => {
                 const buffer = Buffer.concat(requestChunks);
                 let url = (ctx.isSSL ? 'https' : 'http') + '://';
                 url += ctx.clientToProxyRequest.headers.host;
@@ -166,15 +164,15 @@ export default class MitmProxy {
                 }
 
                 ctx.proxyToServerRequest.write(buffer);
+                callback();
+            });
+
+            context.onResponseData((ctx, chunk, callback) => {
+                responseChunks.push(chunk);
                 return callback();
             });
 
-            ctx.onResponseData((ctx, chunk, callback) => {
-                responseChunks.push(chunk);
-                return callback(null, chunk);
-            });
-
-            ctx.onResponseEnd(async (ctx, callback) => {
+            context.onResponseEnd(async (ctx, callback) => {
                 const buffer = Buffer.concat(responseChunks);
                 try {
                     if (endpoint === 'api') {
@@ -187,19 +185,17 @@ export default class MitmProxy {
                 }
 
                 ctx.proxyToClientResponse.write(buffer);
-                return callback();
+                callback(false);
             });
-
-            return callback();
         }
         else {
-            logger.debug('unhandled: %s%s', host, ctx.clientToProxyRequest.url);
+            logger.debug('unhandled: %s%s', host, context.clientToProxyRequest.url);
             if (config.proxy.chainproxy) {
-                ctx.proxyToServerRequestOptions.agent = new HttpsProxyAgent(config.proxy.chainproxy);
+                context.proxyToServerRequestOptions.agent = new HttpsProxyAgent(config.proxy.chainproxy);
             }
-
-            return callback();
         }
+
+        callback();
     }
 
     async simpleDumpRequest(id, ctx, buffer: Buffer, url: string) {
