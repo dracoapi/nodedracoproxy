@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const logger = require("winston");
 const fs = require("mz/fs");
 const _ = require("lodash");
 const moment = require("moment");
 const HttpsProxyAgent = require("https-proxy-agent");
 const mitmproxy = require('http-mitm-proxy');
 const utils_1 = require("./utils");
+const logger_1 = require("./logger");
 const endpoints = {
-    api: 'us.draconiusgo.com',
+    api: 'us.draconiusgo.com'
 };
 class MitmProxy {
     constructor(config) {
@@ -17,9 +17,9 @@ class MitmProxy {
     }
     async launch() {
         const config = this.config;
-        const ip = config.ip = this.utils.getIp();
-        logger.info('Proxy listening at %s:%s', ip, config.proxy.port);
-        logger.info('Proxy config url available at http://%s:%s/proxy.pac', ip, config.proxy.port);
+        const ip = (config.ip = this.utils.getIp());
+        logger_1.logger.info(`Proxy listening at ${ip}:${config.proxy.port}`);
+        logger_1.logger.info(`Proxy config url available at http://${ip}:${config.proxy.port}/proxy.pac`);
         this.proxy = mitmproxy()
             .use(mitmproxy.gunzip)
             .onError(_.bind(this.onError, this))
@@ -30,11 +30,12 @@ class MitmProxy {
         const config = this.config;
         const host = context.clientToProxyRequest.headers.host;
         const endpoint = _.findKey(endpoints, endpoint => endpoint === host);
-        if (host === `${config.ip}:${config.proxy.port}` || (config.proxy.hostname && _.startsWith(host, config.proxy.hostname))) {
+        if (host === `${config.ip}:${config.proxy.port}` ||
+            (config.proxy.hostname && _.startsWith(host, config.proxy.hostname))) {
             const res = context.proxyToClientResponse;
             if (_.startsWith(context.clientToProxyRequest.url, '/proxy.pac')) {
                 // get proxy.pac
-                logger.info('Get proxy.pac');
+                logger_1.logger.info('Get proxy.pac');
                 let data = await fs.readFile('templates/proxy.pac', 'utf8');
                 if (_.endsWith(host, '.ngrok.io')) {
                     data = data.replace(/##PROXY##/g, host + ':80');
@@ -42,19 +43,25 @@ class MitmProxy {
                 else {
                     data = data.replace(/##PROXY##/g, host);
                 }
-                res.writeHead(200, { 'Content-Type': 'application/x-ns-proxy-autoconfig', 'Content-Length': data.length });
+                res.writeHead(200, {
+                    'Content-Type': 'application/x-ns-proxy-autoconfig',
+                    'Content-Length': data.length
+                });
                 res.end(data, 'utf8');
             }
             else if (_.startsWith(context.clientToProxyRequest.url, '/cert')) {
                 // get cert
-                logger.info('Get certificate');
+                logger_1.logger.info('Get certificate');
                 const path = this.proxy.sslCaDir + '/certs/ca.pem';
                 const data = await fs.readFile(path);
-                res.writeHead(200, { 'Content-Type': 'application/x-x509-ca-cert', 'Content-Length': data.length });
+                res.writeHead(200, {
+                    'Content-Type': 'application/x-x509-ca-cert',
+                    'Content-Length': data.length
+                });
                 res.end(data, 'binary');
             }
             else {
-                logger.info('Incorrect request');
+                logger_1.logger.info('Incorrect request');
                 res.end('what?', 'utf8');
             }
         }
@@ -84,7 +91,7 @@ class MitmProxy {
                     }
                 }
                 catch (e) {
-                    logger.error(e);
+                    logger_1.logger.error(e);
                 }
                 ctx.proxyToServerRequest.write(buffer);
                 callback();
@@ -104,7 +111,7 @@ class MitmProxy {
                     }
                 }
                 catch (e) {
-                    logger.error(e);
+                    logger_1.logger.error(e);
                 }
                 ctx.proxyToClientResponse.write(buffer);
                 callback(false);
@@ -112,7 +119,7 @@ class MitmProxy {
             callback();
         }
         else {
-            logger.debug('unhandled: %s%s', host, context.clientToProxyRequest.url);
+            logger_1.logger.debug(`unhandled: ${host}${context.clientToProxyRequest.url}`);
             if (config.proxy.chainproxy) {
                 context.proxyToServerRequestOptions.agent = new HttpsProxyAgent(config.proxy.chainproxy);
             }
@@ -120,16 +127,16 @@ class MitmProxy {
         }
     }
     async simpleDumpRequest(id, ctx, buffer, url) {
-        logger.debug('Dumping request to %s', url);
+        logger_1.logger.debug(`Dumping request to ${url}`);
         const data = {
             id,
             when: +moment(),
             endpoint: url,
             more: {
                 url,
-                headers: ctx.proxyToServerRequest._headers,
+                headers: ctx.proxyToServerRequest._headers
             },
-            data: buffer.toString('base64'),
+            data: buffer.toString('base64')
         };
         await fs.writeFile(`${this.config.datadir}/${id}.req.bin`, JSON.stringify(data, null, 4), 'utf8');
     }
@@ -137,16 +144,16 @@ class MitmProxy {
         await fs.writeFile(`${this.config.datadir}/${id}.res.bin`, buffer.toString('base64'), 'utf8');
     }
     async handleApiRequest(id, ctx, buffer, url) {
-        logger.info('Api request: %s', url);
+        logger_1.logger.info('Api request: %s', url);
         const data = {
             id,
             when: +moment(),
             endpoint: url,
             more: {
                 url,
-                headers: ctx.proxyToServerRequest._headers,
+                headers: ctx.proxyToServerRequest._headers
             },
-            data: buffer.toString('base64'),
+            data: buffer.toString('base64')
         };
         await fs.writeFile(`${this.config.datadir}/${id}.req.bin`, JSON.stringify(data, null, 4), 'utf8');
     }
@@ -154,7 +161,7 @@ class MitmProxy {
         await fs.writeFile(`${this.config.datadir}/${id}.res.bin`, buffer.toString('base64'), 'utf8');
     }
     onError(ctx, err) {
-        logger.error('Proxy error: ', err);
+        logger_1.logger.error('Proxy error: ', err);
     }
 }
 exports.default = MitmProxy;

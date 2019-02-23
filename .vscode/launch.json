@@ -9,7 +9,8 @@
             "cwd": "${workspaceRoot}",
             "outFiles": [ "${workspaceRoot}/bin/**/*.js" ],
             "sourceMaps": true,
-            "stopOnEntry": false
+            "stopOnEntry": false,
+            "outputCapture": "std"
         },
         {
             "type": "node",
@@ -19,7 +20,8 @@
             "cwd": "${workspaceRoot}",
             "outFiles": [ "${workspaceRoot}/bin/**/*.js" ],
             "sourceMaps": true,
-            "stopOnEntry": false
+            "stopOnEntry": false,
+            "outputCapture": "std"
         }
     ]
 }

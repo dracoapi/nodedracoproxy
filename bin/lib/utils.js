@@ -14,7 +14,9 @@ class Utils {
         // typing is bad but I can't find a way to make it works
         const ipv4 = _(os.networkInterfaces())
             .filter((i, name) => !/(loopback|vmware|internal)/gi.test(name))
-            .flatten().filter(ip => !ip.internal && ip.family === 'IPv4').first();
+            .flatten()
+            .filter(ip => !ip.internal && ip.family === 'IPv4')
+            .first();
         return ipv4.address;
     }
     async initFolders() {
@@ -37,8 +39,7 @@ class Utils {
         try {
             await fs.mkdir(this.config.data);
         }
-        catch (e) {
-        }
+        catch (e) { }
         let folders = await this.getSessionFolders();
         folders = await Bluebird.filter(folders, async (dir) => {
             const content = await fs.readdir(path.join(this.config.data, dir));
@@ -63,8 +64,8 @@ class Utils {
         for (let i = 0; i < data.length; i++) {
             const oneByte = data[i];
             const prevByte = i > 0 ? data[i - 1] : null;
-            const newLineDetected = ((oneByte === 0x0a) && (prevByte === 0x0d)) ? true : false;
-            const newLineChar = ((oneByte === 0x0a) || (oneByte === 0x0d)) ? true : false;
+            const newLineDetected = oneByte === 0x0a && prevByte === 0x0d ? true : false;
+            const newLineChar = oneByte === 0x0a || oneByte === 0x0d ? true : false;
             if (!newLineChar)
                 lastline += String.fromCharCode(oneByte);
             if (newLineDetected) {
@@ -96,9 +97,9 @@ class Utils {
                 continue;
             }
             if (state === 4) {
-                if (lastline.length > (boundary.length + 4))
+                if (lastline.length > boundary.length + 4)
                     lastline = ''; // mem save
-                if (('--' + boundary) === lastline) {
+                if ('--' + boundary === lastline) {
                     const end = buffer.length - lastline.length;
                     const raw = buffer.slice(0, end);
                     let name = disposition.replace('Content-disposition: form-data; name="', '');

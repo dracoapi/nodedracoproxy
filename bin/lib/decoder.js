@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const logger = require("winston");
 const fs = require("mz/fs");
 const Wreck = require("wreck");
 const Subtext = require("subtext");
@@ -8,6 +7,7 @@ const long = require("long");
 const querystring = require("querystring");
 const utils_1 = require("./utils");
 const deserializer_1 = require("../draco/deserializer");
+const logger_1 = require("./logger");
 class Decoder {
     constructor(config, doNotHide = false) {
         this.config = config;
@@ -24,27 +24,32 @@ class Decoder {
             if (content.length === 0)
                 return {};
             const data = JSON.parse(content);
-            if (data.more && data.more.url === 'https://us.draconiusgo.com/serviceCall') {
+            if (data.more &&
+                data.more.url === 'https://us.draconiusgo.com/serviceCall') {
                 const request = Wreck.toReadableStream(Buffer.from(data.data, 'base64'));
                 request.headers = data.more.headers;
-                const { payload } = await Subtext.parse(request, null, { parse: true, output: 'data' });
+                const { payload } = await Subtext.parse(request, null, {
+                    parse: true,
+                    output: 'data'
+                });
                 const version = request.headers['protocol-version'];
                 const deserializer = new deserializer_1.default(version, payload.args);
                 data.data = {
                     service: payload.service,
                     method: payload.method,
-                    data: deserializer.deserialize(),
+                    data: deserializer.deserialize()
                 };
             }
-            else if (data.more && data.more.url === 'https://us.draconiusgo.com/client-error') {
+            else if (data.more &&
+                data.more.url === 'https://us.draconiusgo.com/client-error') {
                 data.data = querystring.parse(Buffer.from(data.data, 'base64').toString());
             }
             await fs.writeFile(`data/${session}/${requestId}.req.json`, JSON.stringify(data, null, 2), 'utf8');
             return data;
         }
         catch (e) {
-            logger.error(`Unable to parse file data/${session}/${requestId}.req.bin`);
-            logger.error(e);
+            logger_1.logger.error(`Unable to parse file data/${session}/${requestId}.req.bin`);
+            logger_1.logger.error(e);
             return null;
         }
     }
@@ -65,8 +70,8 @@ class Decoder {
             return data;
         }
         catch (e) {
-            logger.error('Error decrypting response %s of session %s', requestId, session);
-            logger.error(e);
+            logger_1.logger.error(`Error decrypting response ${requestId} of session ${session}`);
+            logger_1.logger.error(e);
             return { error: 'unable to decode response' };
         }
     }
@@ -78,7 +83,7 @@ class Decoder {
             for (const [key, value] of data) {
                 array.push({
                     key,
-                    value: this.prettify(value),
+                    value: this.prettify(value)
                 });
             }
             return array;
@@ -98,7 +103,8 @@ class Decoder {
         else if (data instanceof Buffer) {
             return data.toString('base64');
         }
-        else if (typeof data === 'object') { //  && data.__type
+        else if (typeof data === 'object') {
+            //  && data.__type
             for (const key in data) {
                 data[key] = this.prettify(data[key]);
             }

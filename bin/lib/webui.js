@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
-const logger = require("winston");
 const fs = require("mz/fs");
 const _ = require("lodash");
 const moment = require("moment");
 const Bluebird = require("bluebird");
 const decoder_js_1 = require("./decoder.js");
 const utils_js_1 = require("./utils.js");
+const logger_1 = require("./logger");
 class WebUI {
     constructor(config) {
         this.config = config;
@@ -17,7 +17,7 @@ class WebUI {
     launch() {
         const config = this.config.ui;
         if (config.active) {
-            const app = this.app = express();
+            const app = (this.app = express());
             app.set('etag', false);
             app.use('/api*', function (req, res, next) {
                 res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
@@ -25,38 +25,38 @@ class WebUI {
                 res.header('Pragma', 'no-cache');
                 next();
             });
-            app.get('/api/config', _.bind(this.getConfig, this));
-            app.get('/api/sessions', _.bind(this.getSessions, this));
-            app.get('/api/session/:session', _.bind(this.getRequests, this));
-            app.get('/api/request/:session/:request', _.bind(this.decodeRequest, this));
-            app.get('/api/response/:session/:request', _.bind(this.decodeResponse, this));
+            app.get('/api/config', (_.bind(this.getConfig, this)));
+            app.get('/api/sessions', (_.bind(this.getSessions, this)));
+            app.get('/api/session/:session', (_.bind(this.getRequests, this)));
+            app.get('/api/request/:session/:request', (_.bind(this.decodeRequest, this)));
+            app.get('/api/response/:session/:request', (_.bind(this.decodeResponse, this)));
             this.app.get('/logout', function (req, res) {
                 req.logout();
                 res.redirect('/');
             });
             app.use(express.static('webui'));
             app.listen(config.port, () => {
-                logger.info('UI started, port %s.', config.port);
+                logger_1.logger.info(`UI started, port ${config.port}.`);
             });
         }
         else {
-            logger.info('UI deactivated.');
+            logger_1.logger.info('UI deactivated.');
         }
     }
     async getConfig(req, res, next) {
         return res.json({
             auth: this.config.ui.auth.active,
-            ga: this.config.ui.ga.key,
+            ga: this.config.ui.ga.key
         });
     }
     async getSessions(req, res, next) {
-        logger.info('Getting sessions.');
+        logger_1.logger.info('Getting sessions.');
         try {
             const folders = await this.utils.getSessionFolders();
             const data = await Bluebird.map(folders, async (folder) => {
                 const info = {
                     id: folder,
-                    title: moment(folder, 'YYYYMMDD.HHmmss').format('DD MMM YY - HH:mm:ss'),
+                    title: moment(folder, 'YYYYMMDD.HHmmss').format('DD MMM YY - HH:mm:ss')
                 };
                 if (fs.existsSync(`data/${folder}/.info`)) {
                     const content = await fs.readFile(`data/${folder}/.info`, 'utf8');
@@ -67,12 +67,13 @@ class WebUI {
             return res.json(data);
         }
         catch (e) {
-            logger.error(e);
-            res.status(500).send(e);
+            logger_1.logger.error(e.message);
+            logger_1.logger.error(e.toString());
+            res.status(500).send(e.message);
         }
     }
     async getRequests(req, res, next) {
-        logger.info('Getting requests for session %s', req.params.session);
+        logger_1.logger.info(`Getting requests for session ${req.params.session}`);
         try {
             let files = await fs.readdir(`data/${req.params.session}`);
             files = _.sortBy(_.filter(files, d => _.endsWith(d, '.req.bin')));
@@ -112,14 +113,14 @@ class WebUI {
                     file: {
                         id: requestid,
                         title,
-                        when: data.when,
+                        when: data.when
                     }
                 };
             });
             const result = {
                 title: '',
                 files: infos.map(info => info.file),
-                steps: _.filter(infos.map(info => info.coords), coord => coord.lat || coord.lng),
+                steps: _.filter(infos.map(info => info.coords), coord => coord.lat || coord.lng)
             };
             if (fs.existsSync(`data/${req.params.session}/.info`)) {
                 const info = await fs.readFile(`data/${req.params.session}/.info`, 'utf8');
@@ -128,27 +129,29 @@ class WebUI {
             return res.json(result);
         }
         catch (e) {
-            logger.error(e);
-            res.status(500).send(e);
+            logger_1.logger.error(e.message);
+            logger_1.logger.error(e.toString());
+            res.status(500).send(e.message);
         }
     }
     async decodeRequest(req, res, next) {
-        logger.info('Decrypting session %d, request %s', req.params.session, req.params.request);
+        logger_1.logger.info('Decrypting session %d, request %s', req.params.session, req.params.request);
         try {
             const force = !this.config.ui.cachejson;
             const data = await this.decoder.decodeRequest(req.params.session, req.params.request, force);
             return res.json({
                 info: data.more,
-                data: this.decoder.prettify(data.data),
+                data: this.decoder.prettify(data.data)
             });
         }
         catch (e) {
-            logger.error(e);
-            return res.status(500).send(e);
+            logger_1.logger.error(e.message);
+            logger_1.logger.error(e.toString());
+            return res.status(500).send(e.message);
         }
     }
     async decodeResponse(req, res, next) {
-        logger.info('Decrypting session %d, response %s', req.params.session, req.params.request);
+        logger_1.logger.info('Decrypting session %d, response %s', req.params.session, req.params.request);
         try {
             const force = !this.config.ui.cachejson;
             let data = await this.decoder.decodeResponse(req.params.session, req.params.request, force);
@@ -156,8 +159,9 @@ class WebUI {
             return res.json(data);
         }
         catch (e) {
-            logger.error(e);
-            return res.status(500).send(e);
+            logger_1.logger.error(e.message);
+            logger_1.logger.error(e.toString());
+            return res.status(500).send(e.message);
         }
     }
 }
